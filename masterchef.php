@@ -288,7 +288,7 @@
         </div>
     </div>
 
-    <script src="recipe-search-fixed.js"></script>
+    <script src="masterchef.js"></script>
 </body>
 </html>
 

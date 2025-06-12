@@ -1,128 +1,174 @@
 <?php
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST');
+header('Access-Control-Allow-Headers: Content-Type');
 
-header("Content-Type: application/json");
-
-$db_file = __DIR__ . '/app.db';
+// Configuration de la base de données - CORRECTION ICI
+$host = 'localhost';
+$dbname = 'cookbot_recipes'; // Changé de 'diet_advisor' à 'cookbot_recipes'
+$username = 'root';
+$password = '';
 
 try {
-    $pdo = new PDO('sqlite:' . $db_file);
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    echo json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]);
-    exit();
+} catch(PDOException $e) {
+    echo json_encode(['success' => false, 'error' => 'Erreur de connexion à la base de données: ' . $e->getMessage()]);
+    exit;
 }
 
-$input = json_decode(file_get_contents('php://input'), true);
-
-$demande = $input['demande'] ?? '';
-$portions = $input['portions'] ?? 1;
-$duree = $input['duree'] ?? null;
-$niveau = $input['niveau'] ?? null;
-$regime = $input['regime'] ?? null;
-
-// Fonction pour filtrer les recettes par régime alimentaire
-function filterByDietaryNeeds($recipe, $regime) {
-    if ($regime === 'vegetarien') {
-        return !preg_match('/(viande|poulet|boeuf|porc|agneau|poisson|fruits de mer)/i', $recipe['ingredients']);
-    } elseif ($regime === 'vegetalien') {
-        return !preg_match('/(viande|poulet|boeuf|porc|agneau|poisson|fruits de mer|lait|fromage|oeuf|miel)/i', $recipe['ingredients']);
-    } elseif ($regime === 'sans_gluten') {
-        return !preg_match('/(blé|seigle|orge|farine)/i', $recipe['ingredients']);
-    } elseif ($regime === 'sans_produits_laitiers') {
-        return !preg_match('/(lait|fromage|beurre|crème)/i', $recipe['ingredients']);
-    } elseif ($regime === 'cetogene') {
-        // Simplifié pour l'exemple, une vraie implémentation serait plus complexe
-        return !preg_match('/(sucre|riz|pâtes|pain|pomme de terre)/i', $recipe['ingredients']);
-    } elseif ($regime === 'paleo') {
-        // Simplifié pour l'exemple
-        return !preg_match('/(produits laitiers|légumineuses|céréales|sucre raffiné|huiles végétales raffinées)/i', $recipe['ingredients']);
-    } elseif ($regime === 'pescetarien') {
-        return !preg_match('/(viande|poulet|boeuf|porc|agneau)/i', $recipe['ingredients']);
-    }
-    return true;
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode(['success' => false, 'error' => 'Méthode non autorisée']);
+    exit;
 }
 
-// Logique de recherche de recettes
-$query = "SELECT * FROM recette WHERE 1=1";
-$params = [];
+// Récupération des paramètres
+$glucides_cible = floatval($_POST['glucides'] ?? 0);
+$proteines_cible = floatval($_POST['proteines'] ?? 0);
+$lipides_cible = floatval($_POST['lipides'] ?? 0);
+$type_repas = $_POST['typeRepas'] ?? '';
+$besoin_alimentaire = $_POST['besoinAlimentaire'] ?? '';
 
-if (!empty($demande)) {
-    $keywords = explode(' ', $demande);
-    $keyword_conditions = [];
-    foreach ($keywords as $keyword) {
-        $keyword_conditions[] = "(titre LIKE ? OR description LIKE ? OR ingredients LIKE ?)";
-        $params[] = '%' . $keyword . '%';
-        $params[] = '%' . $keyword . '%';
-        $params[] = '%' . $keyword . '%';
-    }
-    $query .= " AND (" . implode(' OR ', $keyword_conditions) . ")";
+// Validation des paramètres
+if (empty($type_repas) || $glucides_cible < 0 || $proteines_cible < 0 || $lipides_cible < 0) {
+    echo json_encode(['success' => false, 'error' => 'Paramètres invalides']);
+    exit;
 }
 
-if (!empty($niveau) && $niveau !== 'standard') {
-    $query .= " AND difficulte = ?";
-    $params[] = $niveau;
+// Fonction pour calculer la distance entre les macros cibles et celles de la recette
+function calculateMacroDistance($recipe, $glucides_cible, $proteines_cible, $lipides_cible) {
+    $glucides_diff = abs(($recipe['GLUCIDES'] ?? 0) - $glucides_cible);
+    $proteines_diff = abs(($recipe['PROTEINES'] ?? 0) - $proteines_cible);
+    $lipides_diff = abs(($recipe['LIPIDES'] ?? 0) - $lipides_cible);
+    
+    // Distance euclidienne pondérée
+    return sqrt(
+        pow($glucides_diff * 0.4, 2) + 
+        pow($proteines_diff * 0.4, 2) + 
+        pow($lipides_diff * 0.2, 2)
+    );
 }
 
-$stmt = $pdo->prepare($query);
-$stmt->execute($params);
-$recipes = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-$filtered_recipes = [];
-foreach ($recipes as $recipe) {
-    // Filtrer par durée
-    $total_time = $recipe['temps_preparation'] + $recipe['temps_cuisson'];
-    if ($duree !== null) {
-        if ($duree == 15 && $total_time > 15) continue;
-        if ($duree == 30 && ($total_time < 15 || $total_time > 30)) continue;
-        if ($duree == 45 && ($total_time < 30 || $total_time > 45)) continue;
-        if ($duree == 60 && ($total_time < 45 || $total_time > 60)) continue;
-        if ($duree == 90 && ($total_time < 60 || $total_time > 90)) continue;
-        if ($duree == 120 && $total_time < 90) continue; // Plus de 1h30
-    }
-
-    // Filtrer par régime alimentaire
-    if (!filterByDietaryNeeds($recipe, $regime)) {
-        continue;
-    }
-
-    // Ajuster les portions
-    $original_portions = $recipe['portions'] ?? 1;
-    $portion_factor = $portions / $original_portions;
-
-    $adjusted_ingredients = [];
-    foreach (explode('\n', $recipe['ingredients']) as $ingredient_line) {
-        // Tente de trouver un nombre au début de la ligne
-        if (preg_match('/^(\d+(\.\d+)?)\s*(.*)/', $ingredient_line, $matches)) {
-            $amount = (float)$matches[1];
-            $unit_and_item = $matches[3];
-            $adjusted_amount = round($amount * $portion_factor, 2);
-            $adjusted_ingredients[] = $adjusted_amount . ' ' . $unit_and_item;
-        } else {
-            $adjusted_ingredients[] = $ingredient_line; // Pas de nombre, ajouter tel quel
+try {
+    // Construction de la requête SQL de base
+    $sql = "SELECT * FROM recette WHERE TYPE_REPAS = :type_repas AND GLUCIDES IS NOT NULL AND PROTEINES IS NOT NULL AND LIPIDES IS NOT NULL";
+    
+    // Ajouter des conditions selon le besoin alimentaire
+    if (!empty($besoin_alimentaire)) {
+        switch ($besoin_alimentaire) {
+            case 'vegetarien':
+                $sql .= " AND INGREDIENTS NOT LIKE '%poulet%' AND INGREDIENTS NOT LIKE '%boeuf%' AND INGREDIENTS NOT LIKE '%porc%'";
+                break;
+            case 'vegan':
+                $sql .= " AND INGREDIENTS NOT LIKE '%poulet%' AND INGREDIENTS NOT LIKE '%boeuf%' AND INGREDIENTS NOT LIKE '%porc%'";
+                $sql .= " AND INGREDIENTS NOT LIKE '%lait%' AND INGREDIENTS NOT LIKE '%oeuf%' AND INGREDIENTS NOT LIKE '%fromage%'";
+                break;
+            case 'sans_gluten':
+                $sql .= " AND INGREDIENTS NOT LIKE '%blé%' AND INGREDIENTS NOT LIKE '%farine%' AND INGREDIENTS NOT LIKE '%pain%'";
+                break;
+            case 'sans_lactose':
+                $sql .= " AND INGREDIENTS NOT LIKE '%lait%' AND INGREDIENTS NOT LIKE '%fromage%' AND INGREDIENTS NOT LIKE '%yaourt%'";
+                break;
+            case 'low_carb':
+                $sql .= " AND GLUCIDES < 20";
+                break;
+            case 'high_protein':
+                $sql .= " AND PROTEINES > 25";
+                break;
+            case 'keto':
+                $sql .= " AND GLUCIDES < 15 AND LIPIDES > 20";
+                break;
+            case 'paleo':
+                $sql .= " AND INGREDIENTS NOT LIKE '%farine%' AND INGREDIENTS NOT LIKE '%sucre%' AND INGREDIENTS NOT LIKE '%pâtes%'";
+                break;
         }
     }
-    $recipe['ingredients'] = implode('\n', $adjusted_ingredients);
-    $recipe['portions'] = $portions;
-
-    $filtered_recipes[] = $recipe;
-}
-
-if (!empty($filtered_recipes)) {
-    $random_recipe = $filtered_recipes[array_rand($filtered_recipes)];
+    
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindParam(':type_repas', $type_repas);
+    $stmt->execute();
+    
+    $recettes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    if (empty($recettes)) {
+        echo json_encode(['success' => false, 'error' => 'Aucune recette trouvée pour ces critères']);
+        exit;
+    }
+    
+    // Calcul de la distance pour chaque recette et tri
+    $recettes_avec_distance = [];
+    foreach ($recettes as $recette) {
+        $distance = calculateMacroDistance($recette, $glucides_cible, $proteines_cible, $lipides_cible);
+        $recette['distance'] = $distance;
+        $recettes_avec_distance[] = $recette;
+    }
+    
+    // Tri par distance croissante
+    usort($recettes_avec_distance, function($a, $b) {
+        return $a['distance'] <=> $b['distance'];
+    });
+    
+    // Retourner les 3 meilleures recettes
+    $meilleures_recettes = array_slice($recettes_avec_distance, 0, 3);
+    
+    // Nettoyer les données pour l'affichage
+    foreach ($meilleures_recettes as &$recette) {
+        unset($recette['distance']);
+        
+        // Arrondir les valeurs nutritionnelles
+        $recette['GLUCIDES'] = round($recette['GLUCIDES'], 1);
+        $recette['PROTEINES'] = round($recette['PROTEINES'], 1);
+        $recette['LIPIDES'] = round($recette['LIPIDES'], 1);
+        $recette['CALORIES'] = round($recette['CALORIES']);
+        
+        // Nettoyer le texte des instructions
+        $recette['INSTRUCTIONS'] = str_replace(['\r\n', '\n', '\r'], "\n", $recette['INSTRUCTIONS']);
+        
+        // Ajouter le régime alimentaire si spécifié
+        if (!empty($besoin_alimentaire)) {
+            switch ($besoin_alimentaire) {
+                case 'vegetarien':
+                    $recette['REGIME_ALIMENTAIRE'] = 'Végétarien';
+                    break;
+                case 'vegan':
+                    $recette['REGIME_ALIMENTAIRE'] = 'Végétalien';
+                    break;
+                case 'sans_gluten':
+                    $recette['REGIME_ALIMENTAIRE'] = 'Sans gluten';
+                    break;
+                case 'sans_lactose':
+                    $recette['REGIME_ALIMENTAIRE'] = 'Sans lactose';
+                    break;
+                case 'low_carb':
+                    $recette['REGIME_ALIMENTAIRE'] = 'Faible en glucides';
+                    break;
+                case 'high_protein':
+                    $recette['REGIME_ALIMENTAIRE'] = 'Riche en protéines';
+                    break;
+                case 'keto':
+                    $recette['REGIME_ALIMENTAIRE'] = 'Keto';
+                    break;
+                case 'paleo':
+                    $recette['REGIME_ALIMENTAIRE'] = 'Paléo';
+                    break;
+            }
+        }
+    }
+    
     echo json_encode([
-        'recipeName' => $random_recipe['titre'],
-        'description' => $random_recipe['description'],
-        'ingredients' => explode('\n', $random_recipe['ingredients']),
-        'instructions' => explode('\n', $random_recipe['instructions']),
-        'prepTime' => $random_recipe['temps_preparation'],
-        'cookTime' => $random_recipe['temps_cuisson'],
-        'difficulty' => $random_recipe['niveau'],
-        'mealType' => $random_recipe['type_plat'],
-        'portions' => $random_recipe['portions']
+        'success' => true,
+        'recipes' => $meilleures_recettes,
+        'criteria' => [
+            'glucides' => $glucides_cible,
+            'proteines' => $proteines_cible,
+            'lipides' => $lipides_cible,
+            'type_repas' => $type_repas,
+            'besoin_alimentaire' => $besoin_alimentaire
+        ]
     ]);
-} else {
-    echo json_encode(['error' => 'Aucune recette trouvée pour les critères spécifiés.']);
+    
+} catch(PDOException $e) {
+    echo json_encode(['success' => false, 'error' => 'Erreur lors de la recherche des recettes: ' . $e->getMessage()]);
 }
-
 ?>
-

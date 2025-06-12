@@ -347,6 +347,6 @@
     <div style=" width: 100%;height: 0.5px; background:black; margin: 30px 0;"></div>
     <div class="copyright">© 2025 CookBot. Tous droits réservés.</div>
     </section>
-    <script src="script1.js"></script>
+    <script src="pantrychef.js"></script>
 </body>
 </html>
