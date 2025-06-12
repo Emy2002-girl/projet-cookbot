@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CookBot MasterChef - Votre assistant culinaire intelligent</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>🍳 CookBot MasterChef</h1>
+                    <p>Votre assistant culinaire intelligent</p>
+                </div>
+                <nav class="nav">
+                    <a href="#home" class="nav-link active" data-section="home">Accueil</a>
+                    <a href="#recipes" class="nav-link" data-section="recipes">Recettes</a>
+                    <a href="#macros" class="nav-link" data-section="macros">MacrosChef</a>
+                    <a href="#meal-plan" class="nav-link" data-section="meal-plan">Plan Alimentaire</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Section Accueil -->
+    <section id="home" class="section active">
+        <div class="container">
+            <div class="hero">
+                <h1>Libérez votre Créativité Culinaire</h1>
+                <p>CookBot MasterChef est votre compagnon culinaire intelligent. Décrivez vos envies, vos ingrédients et
+                    vos contraintes, et laissez notre IA créer des recettes personnalisées parfaitement adaptées à vos
+                    besoins !</p>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary" onclick="showSection('recipes')">
+                        Créer une recette
+                    </button>
+                    <button class="btn btn-secondary" onclick="showSection('macros')">
+                        Atteindre mes macros
+                    </button>
+                </div>
+            </div>
+
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">🍳</div>
+                    <h3>Recettes Personnalisées</h3>
+                    <p>Générez des recettes uniques basées sur vos préférences et ingrédients</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>MacrosChef</h3>
+                    <p>Atteignez vos objectifs nutritionnels avec des recettes adaptées</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📅</div>
+                    <h3>Plan Alimentaire</h3>
+                    <p>Planifiez vos repas pour la semaine selon vos besoins</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Recettes -->
+    <section id="recipes" class="section">
+        <div class="container">
+            <h2>Générateur de Recettes IA</h2>
+
+            <div class="recipe-form-container">
+                <form id="recipeForm" class="recipe-form">
+                    <div class="form-group">
+                        <label for="preferences">Préférences culinaires</label>
+                        <textarea id="preferences" name="preferences"
+                            placeholder="Décrivez ce que vous aimez cuisiner, vos saveurs préférées..."></textarea>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="servings">Nombre de portions</label>
+                            <select id="servings" name="servings">
+                                <option value="">Sélectionnez</option>
+                                <option value="1 personne">1 personne</option>
+                                <option value="2 personnes">2 personnes</option>
+                                <option value="3-4 personnes">3-4 personnes</option>
+                                <option value="5-6 personnes">5-6 personnes</option>
+                                <option value="Plus de 6 personnes">Plus de 6 personnes</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="time">Temps disponible</label>
+                            <select id="time" name="time">
+                                <option value="">Sélectionnez</option>
+                                <option value="Moins de 15 minutes">Moins de 15 minutes</option>
+                                <option value="15-30 minutes">15-30 minutes</option>
+                                <option value="30-60 minutes">30-60 minutes</option>
+                                <option value="1-2 heures">1-2 heures</option>
+                                <option value="Plus de 2 heures">Plus de 2 heures</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="level">Niveau de cuisine</label>
+                            <select id="level" name="level">
+                                <option value="">Sélectionnez</option>
+                                <option value="Débutant">Débutant</option>
+                                <option value="Intermédiaire">Intermédiaire</option>
+                                <option value="Avancé">Avancé</option>
+                                <option value="Expert">Expert</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dietary">Restrictions alimentaires</label>
+                            <select id="dietary" name="dietary">
+                                <option value="">Aucune</option>
+                                <option value="Végétarien">Végétarien</option>
+                                <option value="Végétalien">Végétalien</option>
+                                <option value="Sans gluten">Sans gluten</option>
+                                <option value="Sans lactose">Sans lactose</option>
+                                <option value="Halal">Halal</option>
+                                <option value="Casher">Casher</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="ingredients-section">
+                        <label>Ingrédients disponibles</label>
+                        <div class="ingredients-input">
+                            <input type="text" id="newIngredient" placeholder="Ajouter un ingrédient...">
+                            <button type="button" onclick="addIngredient()">Ajouter</button>
+                        </div>
+                        <div id="selectedIngredients" class="selected-ingredients"></div>
+                        <div class="common-ingredients">
+                            <p>Ingrédients courants :</p>
+                            <div class="ingredients-grid" id="commonIngredients"></div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full">
+                        Générer mes recettes
+                    </button>
+                </form>
+            </div>
+
+            <!-- Résultats des recettes -->
+            <div id="recipeResults" class="recipe-results" style="display: none;"></div>
+        </div>
+    </section>
+
+    <!-- Section MacrosChef -->
+    <section id="macros" class="section">
+        <div class="container">
+            <div class="macros-hero">
+                <h1>Atteignez Vos Macros Facilement !</h1>
+                <p>Lorsque vous avez du mal à atteindre vos macros, MacrosChef est là pour vous aider. Vous pouvez
+                    générer des recettes spécialement conçues pour vous aider à atteindre vos objectifs en
+                    macronutriments.</p>
+            </div>
+
+            <div class="macros-form-container">
+                <form id="macrosForm" class="macros-form">
+                    <div class="macros-inputs">
+                        <div class="macro-input-group">
+                            <label for="targetCarbs">Glucides cibles</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="targetCarbs" name="targetCarbs" min="0" max="500"
+                                    placeholder="34">
+                                <span class="unit">grammes</span>
+                            </div>
+                        </div>
+
+                        <div class="macro-input-group">
+                            <label for="targetProteins">Protéines cibles</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="targetProteins" name="targetProteins" min="0" max="300"
+                                    placeholder="25">
+                                <span class="unit">grammes</span>
+                            </div>
+                        </div>
+
+                        <div class="macro-input-group">
+                            <label for="targetFats">Lipides cibles</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="targetFats" name="targetFats" min="0" max="200"
+                                    placeholder="15">
+                                <span class="unit">grammes</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="mealType">Type de repas</label>
+                            <select id="mealType" name="mealType" required>
+                                <option value="">Sélectionnez le type de repas</option>
+                                <option value="petit-déjeuner">Petit-déjeuner</option>
+                                <option value="déjeuner">Déjeuner</option>
+                                <option value="dîner">Dîner</option>
+                                <option value="collation">Collation</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nutritionalGoal">Objectif nutritionnel</label>
+                            <select id="nutritionalGoal" name="nutritionalGoal" required>
+                                <option value="">Sélectionnez votre objectif</option>
+                                <option value="prise_masse">Prise de masse</option>
+                                <option value="perte_poids">Perte de poids</option>
+                                <option value="maintien">Maintien</option>
+                                <option value="seche">Sèche</option>
+                                <option value="endurance">Endurance</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="macrosDietary">Restrictions alimentaires</label>
+                            <select id="macrosDietary" name="macrosDietary">
+                                <option value="">Aucune restriction</option>
+                                <option value="Végétarien">Végétarien</option>
+                                <option value="Végétalien">Végétalien</option>
+                                <option value="Sans gluten">Sans gluten</option>
+                                <option value="Sans lactose">Sans lactose</option>
+                                <option value="Cétogène">Cétogène</option>
+                                <option value="Paléo">Paléo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full">
+                        🎯 Générer mes recettes macro
+                    </button>
+                </form>
+            </div>
+
+            <!-- Résultats MacrosChef -->
+            <div id="macrosResults" class="macros-results" style="display: none;"></div>
+        </div>
+    </section>
+
+    <!-- Section Plan Alimentaire -->
+    <section id="meal-plan" class="section">
+        <div class="container">
+            <h2>Plan Alimentaire Personnalisé</h2>
+
+            <div class="meal-plan-form-container">
+                <form id="mealPlanForm" class="meal-plan-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="gender">Genre</label>
+                            <select id="gender" name="gender" required>
+                                <option value="">Sélectionnez</option>
+                                <option value="homme">Homme</option>
+                                <option value="femme">Femme</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="age">Âge</label>
+                            <input type="number" id="age" name="age" min="16" max="100" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="weight">Poids (kg)</label>
+                            <input type="number" id="weight" name="weight" min="30" max="200" step="0.1" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="height">Taille (cm)</label>
+                            <input type="number" id="height" name="height" min="120" max="220" step="0.1" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="goal">Objectif</label>
+                            <select id="goal" name="goal" required>
+                                <option value="">Sélectionnez</option>
+                                <option value="perte_de_poids">Perte de poids</option>
+                                <option value="maintien">Maintien du poids</option>
+                                <option value="prise_de_masse">Prise de masse</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="activity">Niveau d'activité</label>
+                            <select id="activity" name="activity" required>
+                                <option value="">Sélectionnez</option>
+                                <option value="sedentaire">Sédentaire</option>
+                                <option value="legerement_actif">Légèrement actif</option>
+                                <option value="moderement_actif">Modérément actif</option>
+                                <option value="tres_actif">Très actif</option>
+                                <option value="extremement_actif">Extrêmement actif</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full">
+                        Générer mon plan alimentaire
+                    </button>
+                </form>
+            </div>
+
+            <!-- Résultats du plan alimentaire -->
+            <div id="mealPlanResults" class="meal-plan-results" style="display: none;"></div>
+        </div>
+    </section>
+
+    <!-- Modal de chargement -->
+    <div id="loadingModal" class="modal">
+        <div class="modal-content">
+            <div class="loader"></div>
+            <h3 id="loadingTitle">Génération en cours...</h3>
+            <p id="loadingMessage">Notre IA travaille pour vous créer le contenu parfait !</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
