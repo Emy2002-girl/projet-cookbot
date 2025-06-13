@@ -26,20 +26,20 @@
                     
                     <!-- Dropdown Menu -->
                     <div class="dropdown-menu">
-                        <a href="#" class="dropdown-item">
+                        <a href="pantrychef.php" class="dropdown-item">
                             <div class="dropdown-icon icon-pantry">🥘</div>
                             <span class="dropdown-text">PantryChef</span>
                         </a>
-                        <a href="#" class="dropdown-item">
+                        <a href="masterchef.php" class="dropdown-item">
                             <div class="dropdown-icon icon-master">👨‍🍳</div>
                             <span class="dropdown-text">MasterChef</span>
                         </a>
-                        <a href="#" class="dropdown-item">
+                        <a href="macroschef.php" class="dropdown-item">
                             <div class="dropdown-icon icon-macros">🍌</div>
                             <span class="dropdown-text">MacrosChef</span>
                         </a>
                         
-                        <a href="#" class="dropdown-item">
+                        <a href="mealplanchef.php" class="dropdown-item">
                             <div class="dropdown-icon icon-meal">📅</div>
                             <span class="dropdown-text">MealPlanChef</span>
                         </a>

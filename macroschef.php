@@ -23,20 +23,20 @@
                     </a>
                     <!-- Dropdown Menu -->
                     <div class="dropdown-menu">
-                        <a href="#" class="dropdown-item">
+                        <a href="pantrychef.php" class="dropdown-item">
                             <div class="dropdown-icon icon-pantry">🥘</div>
                             <span class="dropdown-text">PantryChef</span>
                         </a>
-                        <a href="#" class="dropdown-item">
+                        <a href="masterchef.php" class="dropdown-item">
                             <div class="dropdown-icon icon-master">👨‍🍳</div>
                             <span class="dropdown-text">MasterChef</span>
                         </a>
-                        <a href="#" class="dropdown-item">
+                        <a href="macroschef.php" class="dropdown-item">
                             <div class="dropdown-icon icon-macros">💪</div>
                             <span class="dropdown-text">MacrosChef</span>
                         </a>
                         
-                        <a href="#" class="dropdown-item">
+                        <a href="mealplanchef.php" class="dropdown-item">
                             <div class="dropdown-icon icon-meal">📅</div>
                             <span class="dropdown-text">MealPlanChef</span>
                         </a>
@@ -102,7 +102,6 @@
                 </div>
             </div>
         </div>
-        
         <!-- Section 2: Type de repas -->
         <div class="contain">
             <div class="etapes">
@@ -112,7 +111,7 @@
                 <p style="padding-top: 18px;">MacrosChef vous recommandera ensuite une recette adaptée au repas que vous avez sélectionné.</p>
             </div>
             <div class="type-repas">
-                <select name="type_repas" id="type-repas-select">
+                <select name="type_repas" id="type-repas-select" style="width:80%">
                     <option value="">-- Sélectionnez un type de repas --</option>
                     <option value="petit-déjeuner">Petit-déjeuner</option>
                     <option value="déjeuner">Déjeuner</option>

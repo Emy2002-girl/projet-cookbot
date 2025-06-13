@@ -404,7 +404,7 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
 
             // Appel réel à l'API PHP
-            fetch('pantrychef.php', {
+            fetch('search_recipes.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

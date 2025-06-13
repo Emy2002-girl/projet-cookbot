@@ -45,12 +45,12 @@
                             <span class="dropdown-text">MasterChef</span>
                         </a>
                         
-                        <a href="#" class="dropdown-item">
+                        <a href="macroschef.php" class="dropdown-item">
                             <div class="dropdown-icon icon-macros">🍌</div>
                             <span class="dropdown-text">MacrosChef</span>
                         </a>
                         
-                        <a href="#" class="dropdown-item">
+                        <a href="mealplanchef.php" class="dropdown-item">
                             <div class="dropdown-icon icon-meal">📅</div>
                             <span class="dropdown-text">MealPlanChef</span>
                         </a>
@@ -156,7 +156,6 @@
                            required>
                 </div>
             </div>
-
             <!-- Section 3: Durée -->
             <div class="contain">
                 <div class="etapes">
