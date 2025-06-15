@@ -1,3 +1,11 @@
+<?php
+session_start();
+$user_logged_in = isset($_SESSION['user_id']);
+$user_email = $user_logged_in ? $_SESSION['user_email'] : '';
+$user_name = $user_logged_in ? ($_SESSION['user_name'] ?? '') : '';
+$user_prenom = $user_logged_in ? ($_SESSION['user_prenom'] ?? '') : '';
+$initial = $user_logged_in ? strtoupper(substr($user_prenom, 0, 1)) : '';
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -5,6 +13,101 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CookBot - MealPlanChef</title>
     <link rel="stylesheet" href="mealplanchef.css">
+    <style>
+        /* Style pour le menu utilisateur */
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .user-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 24px;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .user-button:hover {
+            background-color: #e5e7eb;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 40%;
+            background-color: #10b981;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .user-menu {
+            position: absolute;
+            right: 0;
+            top: 45px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            width: 220px;
+            z-index: 100;
+            overflow: hidden;
+            display: none;
+        }
+
+        .user-menu.active {
+            display: block;
+        }
+
+        .user-menu-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .user-menu-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .user-menu-email {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .user-menu-items {
+            padding: 8px 0;
+        }
+
+        .user-menu-item {
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #374151;
+            transition: background-color 0.2s;
+        }
+
+        .user-menu-item:hover {
+            background-color: #f9fafb;
+        }
+
+        .user-menu-item.logout {
+            color: #dc2626;
+        }
+
+        .user-menu-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
 </head>
 <body>
     <header class="header">
@@ -24,15 +127,15 @@
                     
                     <!-- Dropdown Menu -->
                     <div class="dropdown-menu">
-                        <a href="#" class="dropdown-item">
+                        <a href="pantrychef.php" class="dropdown-item">
                             <div class="dropdown-icon icon-pantry">🥘</div>
                             <span class="dropdown-text">PantryChef</span>
                         </a>
-                        <a href="#" class="dropdown-item">
+                        <a href="masterchef.php" class="dropdown-item">
                             <div class="dropdown-icon icon-master">👨‍🍳</div>
                             <span class="dropdown-text">MasterChef</span>
                         </a>
-                        <a href="#" class="dropdown-item">
+                        <a href="macroschef.php" class="dropdown-item">
                             <div class="dropdown-icon icon-macros">🍌</div>
                             <span class="dropdown-text">MacrosChef</span>
                         </a>
@@ -55,8 +158,38 @@
             <div class="header-right">
                 <span style="border: 1px solid gainsboro; padding: 0.5rem 0.75rem; border-radius: 18px;">FR</span>
                 <span style="border: 1px solid gainsboro; padding: 0.5rem 0.75rem; border-radius: 18px;"><img src="images/sun.png" alt="" width="17" height="17" margin-top="5px"></span>
-                <a href="login.php" class="login-link" >Se connecter</a>
+                
+                <?php if ($user_logged_in): ?>
+                <!-- Menu utilisateur -->
+                <div class="user-dropdown">
+                    <div class="user-button" id="userButton">
+                        <div class="user-avatar"><?php echo $initial; ?></div>
+                    </div>
+                    <div class="user-menu" id="userMenu">
+                        <div class="user-menu-header">
+                            <div class="user-menu-name"><?php echo htmlspecialchars($user_prenom . ' ' . $user_name); ?></div>
+                            <div class="user-menu-email"><?php echo htmlspecialchars($user_email); ?></div>
+                        </div>
+                        <div class="user-menu-items">
+                            <a href="parametres.php" class="user-menu-item">
+                                <div class="user-menu-icon">⚙️</div>
+                                <span>Paramètres</span>
+                            </a>
+                            <a href="cuisine.php" class="user-menu-item">
+                                <div class="user-menu-icon">🍳</div>
+                                <span>Cuisine</span>
+                            </a>
+                            <a href="logout.php" class="user-menu-item logout">
+                                <div class="user-menu-icon">🚪</div>
+                                <span>Se déconnecter</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <?php else: ?>
+                <a href="login.php" class="login-link">Se connecter</a>
                 <a href="inscription.php" class="btn-primary">S'inscrire</a>
+                <?php endif; ?>
             </div>
         </nav>
     </header>
@@ -72,7 +205,7 @@
                 Végétalien ? Paléo ? Keto ? Vous essayez de développer vos muscles ? Vous essayez de manger plus sainement ? Aucun problème. Laissez MealPlanChef faire le travail difficile. MealPlanChef génère des plans alimentaires pour votre semaine pour vous aider à atteindre votre objectif ou votre régime alimentaire.
                 </p>
             </div>
-            <div class="image"><img src="images/mealplan.avif" alt="" srcset="" width="100%" height="auto" style="border-radius:20%;box-shadow: #BDBDBD 10px 7px 0px"></div>
+            <div class="image"><img src="images/mealplan.avif" alt="" srcset="" width="100%" height="auto"></div>
         </div>
     </section>
     <main>

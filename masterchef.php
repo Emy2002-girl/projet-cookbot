@@ -1,3 +1,11 @@
+<?php
+session_start();
+$user_logged_in = isset($_SESSION['user_id']);
+$user_email = $user_logged_in ? $_SESSION['user_email'] : '';
+$user_name = $user_logged_in ? ($_SESSION['user_name'] ?? '') : '';
+$user_prenom = $user_logged_in ? ($_SESSION['user_prenom'] ?? '') : '';
+$initial = $user_logged_in ? strtoupper(substr($user_prenom, 0, 1)) : '';
+ ?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -7,6 +15,99 @@
     <title>CookBot MasterChef - IA Culinaire</title>
     <link rel="stylesheet" href="masterchef.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Style pour le menu utilisateur */
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .user-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 24px;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .user-button:hover {
+            background-color: #e5e7eb;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 40%;
+            background-color: #10b981;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .user-menu {
+            position: absolute;
+            right: 0;
+            top: 45px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            width: 220px;
+            z-index: 100;
+            overflow: hidden;
+            display: none;
+        }
+        .user-menu.active {
+            display: block;
+        }
+        .user-menu-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .user-menu-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .user-menu-email {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .user-menu-items {
+            padding: 8px 0;
+        }
+
+        .user-menu-item {
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #374151;
+            transition: background-color 0.2s;
+        }
+
+        .user-menu-item:hover {
+            background-color: #f9fafb;
+        }
+
+        .user-menu-item.logout {
+            color: #dc2626;
+        }
+
+        .user-menu-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
 </head>
 <body>
     <header class="header">
@@ -71,8 +172,38 @@
                 <span class="header-btn">
                     <img src="images/sun.png" alt="Thème clair" width="17" height="17">
                 </span>
+                
+                <?php if ($user_logged_in): ?>
+                <!-- Menu utilisateur -->
+                <div class="user-dropdown">
+                    <div class="user-button" id="userButton">
+                        <div class="user-avatar"><?php echo $initial; ?></div>
+                    </div>
+                    <div class="user-menu" id="userMenu">
+                        <div class="user-menu-header">
+                            <div class="user-menu-name"><?php echo htmlspecialchars($user_prenom . ' ' . $user_name); ?></div>
+                            <div class="user-menu-email"><?php echo htmlspecialchars($user_email); ?></div>
+                        </div>
+                        <div class="user-menu-items">
+                            <a href="parametres.php" class="user-menu-item">
+                                <div class="user-menu-icon">⚙️</div>
+                                <span>Paramètres</span>
+                            </a>
+                            <a href="cuisine.php" class="user-menu-item">
+                                <div class="user-menu-icon">🍳</div>
+                                <span>Cuisine</span>
+                            </a>
+                            <a href="logout.php" class="user-menu-item logout">
+                                <div class="user-menu-icon">🚪</div>
+                                <span>Se déconnecter</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <?php else: ?>
                 <a href="login.php" class="login-link">Se connecter</a>
                 <a href="inscription.php" class="btn-primary">S'inscrire</a>
+                <?php endif; ?>
             </div>
         </nav>
     </header>
@@ -286,8 +417,27 @@
             <div id="modal-recipe-content"></div>
         </div>
     </div>
-
     <script src="masterchef.js"></script>
+    <script>
+        // Script pour le menu utilisateur
+        document.addEventListener('DOMContentLoaded', function() {
+            const userButton = document.getElementById('userButton');
+            const userMenu = document.getElementById('userMenu');
+            
+            if (userButton) {
+                userButton.addEventListener('click', function() {
+                    userMenu.classList.toggle('active');
+                });
+                
+                // Fermer le menu si on clique ailleurs
+                document.addEventListener('click', function(event) {
+                    if (!userButton.contains(event.target) && !userMenu.contains(event.target)) {
+                        userMenu.classList.remove('active');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
 

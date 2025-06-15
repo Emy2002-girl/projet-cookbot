@@ -134,42 +134,50 @@ class Utilisateur {
         }
     }
 
-    public function updateProfile($id, $nom, $prenom, $email) {
+    public function updateProfile($user_id, $data) {
         try {
-            // Vérifier si l'email existe déjà pour un autre utilisateur
-            $query = "SELECT ID_UTILISATEUR FROM " . $this->table_name . " WHERE EMAIL = :email AND ID_UTILISATEUR != :id";
+            // Vérifier si l'utilisateur existe
+            $query = "SELECT ID_UTILISATEUR FROM " . $this->table_name . " WHERE ID_UTILISATEUR = :id";
             $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':email', $email);
-            $stmt->bindParam(':id', $id);
+            $stmt->bindParam(':id', $user_id);
             $stmt->execute();
             
-            if ($stmt->rowCount() > 0) {
+            if ($stmt->rowCount() == 0) {
                 return [
                     'success' => false,
-                    'message' => 'Cet email est déjà utilisé par un autre utilisateur'
+                    'message' => 'Utilisateur non trouvé'
                 ];
             }
 
-            // Mettre à jour le profil
-            $query = "UPDATE " . $this->table_name . " 
-                     SET NOM = :nom, PRENOM = :prenom, EMAIL = :email 
+            // Mettre à jour le profil utilisateur
+            $query = "UPDATE " . $this->table_name . " SET 
+                     GENRE = :genre,
+                     AGE = :age,
+                     TAILLE = :taille,
+                     POIDS = :poids,
+                     NIVEAU_CUISINE = :niveau_cuisine,
+                     RESTRICTIONS_ALIMENTAIRES = :restrictions,
+                     PROFIL_COMPLETE = 1
                      WHERE ID_UTILISATEUR = :id";
             
             $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':nom', $nom);
-            $stmt->bindParam(':prenom', $prenom);
-            $stmt->bindParam(':email', $email);
-            $stmt->bindParam(':id', $id);
+            $stmt->bindParam(':genre', $data['genre']);
+            $stmt->bindParam(':age', $data['age']);
+            $stmt->bindParam(':taille', $data['taille']);
+            $stmt->bindParam(':poids', $data['poids']);
+            $stmt->bindParam(':niveau_cuisine', $data['niveau_cuisine']);
+            $stmt->bindParam(':restrictions', $data['restrictions']);
+            $stmt->bindParam(':id', $user_id);
 
             if ($stmt->execute()) {
                 return [
                     'success' => true,
-                    'message' => 'Profil mis à jour avec succès!'
+                    'message' => 'Profil mis à jour avec succès'
                 ];
             } else {
                 return [
                     'success' => false,
-                    'message' => 'Erreur lors de la mise à jour'
+                    'message' => 'Erreur lors de la mise à jour du profil'
                 ];
             }
         } catch (PDOException $e) {

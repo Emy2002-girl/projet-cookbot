@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $message_type = $result['success'] ? 'success' : 'error';
         
         if ($result['success']) {
-            header('Location: tableau-de-bord.php');
+            header('Location: index2.php');
             exit();
         }
     } catch (Exception $e) {

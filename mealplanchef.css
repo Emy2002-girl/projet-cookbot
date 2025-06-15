@@ -141,32 +141,14 @@
     flex-shrink: 0;
   }
   
-  .icon-pantry {
-    background: #fce7f3;
-    color: #ec4899;
-  }
-  .icon-master {
-    background: #fed7aa;
-    color: #ea580c;
-  }
-  .icon-macros {
-    background: #fef3c7;
-    color: #d97706;
-  }
-  .icon-meal {
-    background: #dbeafe;
-    color: #2563eb;
-  }
-  .icon-pair {
-    background: #f3e8ff;
-    color: #9333ea;
-  }
-  .icon-mixology {
-    background: #d1fae5;
-    color: #059669;
-  }
-  
-  .dropdown-text {
+  .icon-pantry { background: #fce7f3; color: #ec4899; }
+.icon-master { background: #fed7aa; color: #ea580c; }
+.icon-macros { background: #fef3c7; color: #d97706; }
+.icon-meal { background: #dbeafe; color: #2563eb; }
+.icon-pair { background: #f3e8ff; color: #9333ea; }
+.icon-mixology { background: #d1fae5; color: #059669; }
+
+.dropdown-text {
     font-weight: 500;
     font-size: 15px;
   }
@@ -216,18 +198,14 @@
   }
   
   .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 4rem;
+    margin: 30px 30px;
+    padding: 45px 20px;
+    gap: 105px;
   }
   
   .description {
-    flex: 1;
-    max-width: 600px;
+    width: 50%;
   }
   
   .image {
@@ -272,21 +250,24 @@
   
   /* ===== MAIN CONTENT ===== */
   main {
-    max-width: 1200px;
     margin: 0 auto;
     padding: 2rem 1rem;
   }
   
   /* Sections principales */
   .contain {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-    margin-bottom: 4rem;
+    display: flex;
     align-items: center;
+    gap: 100px;
+    margin: 40px 0;
+    padding: 20px;
+    text-align: left;
+    margin: 25px;
+    margin-bottom: 4rem;
   }
   
   .etapes {
+    width: 55%;
     padding: 1rem;
   }
   
@@ -296,9 +277,8 @@
     justify-content: center;
     width: 3rem;
     height: 3rem;
-    background-color: #10b981;
-    color: white;
-    border-radius: 50%;
+    background-color: #cbf0de;
+    border-radius: 5px;
     font-weight: bold;
     font-size: 1.25rem;
     margin-bottom: 1rem;
@@ -320,22 +300,18 @@
   }
   
   /* Formulaires et sélecteurs */
-  .ingredients-selector,
-  .type-repas,
-  .ustensiles-checkboxes,
-  .duree,
-  .generate-section {
+  .ingredients-selector{
     background-color: white;
     border-radius: 12px;
     padding: 2rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     border: 1px solid #e5e7eb;
+    line-height: 13px;
   }
   
   /* Labels */
   label {
     display: block;
-    margin-bottom: 0.5rem;
     font-weight: 600;
     color: #111827;
     font-size: 1.125rem;
@@ -370,8 +346,15 @@
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
     background-size: 16px;
+    width: 190px;
+    margin-top: 17rem;
+    margin-left: 3rem;
   }
-  
+  .duree{
+    line-height: 13px;
+    margin-top: 15rem;
+    margin-left: 3rem;
+  }
   /* Bouton de génération */
   #generate-recipes {
     width: 100%;

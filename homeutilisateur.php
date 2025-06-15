@@ -27,6 +27,8 @@ $initial = $user_logged_in ? strtoupper(substr($user_prenom, 0, 1)) : '';
             display: flex;
             align-items: center;
             gap: 8px;
+            background-color: #f3f4f6;
+            border: 1px solid #e5e7eb;
             border-radius: 24px;
             padding: 6px 12px;
             cursor: pointer;
@@ -38,9 +40,9 @@ $initial = $user_logged_in ? strtoupper(substr($user_prenom, 0, 1)) : '';
         }
 
         .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 40%;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
             background-color: #10b981;
             color: white;
             display: flex;
@@ -165,6 +167,7 @@ $initial = $user_logged_in ? strtoupper(substr($user_prenom, 0, 1)) : '';
                 <div class="user-dropdown">
                     <div class="user-button" id="userButton">
                         <div class="user-avatar"><?php echo $initial; ?></div>
+                        <span><?php echo htmlspecialchars($user_prenom); ?></span>
                     </div>
                     <div class="user-menu" id="userMenu">
                         <div class="user-menu-header">
@@ -618,7 +621,6 @@ $initial = $user_logged_in ? strtoupper(substr($user_prenom, 0, 1)) : '';
     <div style=" width: 100%;height: 0.5px; background:black; margin: 30px 0;"></div>
     <div class="copyright">© 2025 CookBot. Tous droits réservés.</div>
     </section>
-    <script src="script.js"></script>
     <script>
         // Script pour le menu utilisateur
         document.addEventListener('DOMContentLoaded', function() {
@@ -640,5 +642,4 @@ $initial = $user_logged_in ? strtoupper(substr($user_prenom, 0, 1)) : '';
         });
     </script>
 </body>
-
 </html>

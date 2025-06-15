@@ -41,7 +41,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $message_type = $result['success'] ? 'success' : 'error';
             
             if ($result['success']) {
-                header('Location: login.php?inscrit=1');
+                // Connecter l'utilisateur
+                session_start();
+                $_SESSION['user_id'] = $result['user_id'];
+                $_SESSION['user_name'] = $prenom . ' ' . $nom;
+                $_SESSION['user_role'] = 'utilisateur';
+                
+                // Rediriger vers la page de configuration
+                header('Location: config_profil.php');
                 exit();
             }
         }
