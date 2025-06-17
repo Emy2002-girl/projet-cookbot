@@ -163,9 +163,9 @@ $initial = $user_logged_in ? strtoupper(substr($user_prenom, 0, 1)) : '';
                 <?php if ($user_logged_in): ?>
                 <!-- Menu utilisateur -->
                 <div class="user-dropdown">
-                    <div class="user-button" id="userButton">
-                        <div class="user-avatar"><?php echo $initial; ?></div>
-                    </div>
+                <div class="user-button" id="userButton">
+                <div class="user-avatar"><?php echo htmlspecialchars($initial); ?></div>
+           </div>
                     <div class="user-menu" id="userMenu">
                         <div class="user-menu-header">
                             <div class="user-menu-name"><?php echo htmlspecialchars($user_prenom . ' ' . $user_name); ?></div>
