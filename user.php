@@ -73,13 +73,15 @@ class Utilisateur {
                 
                 if (password_verify($mot_de_passe, $user['MOT_DE_PASSE'])) {
                     // Démarrer la session
-                    session_start();
+                    if (session_status() == PHP_SESSION_NONE) {
+                        session_start();
+                    }
                     $_SESSION['user_id'] = $user['ID_UTILISATEUR'];
                     $_SESSION['user_name'] = $user['NOM'];
                     $_SESSION['user_prenom'] = $user['PRENOM'];
                     $_SESSION['user_email'] = $user['EMAIL'];
                     $_SESSION['user_role'] = $user['ROLE'];
-                    $_SESSION['user_subscription'] = $user['TYPE_ABONNE'];
+                    $_SESSION['user_subscription'] = $user['TYPE_ABONNE'] ?? 'gratuit';
                     
                     return [
                         'success' => true,
@@ -104,6 +106,100 @@ class Utilisateur {
                 'message' => 'Erreur de base de données: ' . $e->getMessage()
             ];
         }
+    }
+
+    // ===== MÉTHODES POUR L'ADMIN =====
+    
+    public function isLoggedIn() {
+        return isset($_SESSION['user_id']);
+    }
+
+    public function isAdmin() {
+        return isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
+    }
+
+    public function getTotalUsers() {
+        try {
+            $query = "SELECT COUNT(*) as total FROM " . $this->table_name . " WHERE ROLE != 'admin'";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['total'] ?? 0;
+        } catch (PDOException $e) {
+            return 0;
+        }
+    }
+
+    public function getTotalRecipesGenerated() {
+        try {
+            $query = "SELECT COUNT(*) as total FROM recette";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['total'] ?? 0;
+        } catch (PDOException $e) {
+            return 0;
+        }
+    }
+
+    public function getPaidUsers() {
+        try {
+            $query = "SELECT COUNT(*) as total FROM " . $this->table_name . " u 
+                     LEFT JOIN abonnement a ON u.ID_ABONNEMENT = a.ID_ABONNEMENT 
+                     WHERE a.TYPE_ABONNE != 'gratuit' AND a.TYPE_ABONNE IS NOT NULL";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['total'] ?? 0;
+        } catch (PDOException $e) {
+            return 0;
+        }
+    }
+
+    public function getTopIngredients($limit = 5) {
+        try {
+            $query = "SELECT i.NOM as nom, COUNT(*) as total 
+                     FROM ingredient i 
+                     JOIN recette_ingredient ri ON i.ID_INGREDIENT = ri.ID_INGREDIENT 
+                     GROUP BY i.ID_INGREDIENT, i.NOM 
+                     ORDER BY total DESC 
+                     LIMIT :limit";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
+    public function getRecentUsers($limit = 5) {
+        try {
+            $query = "SELECT NOM as nom, PRENOM as prenom, EMAIL as email, DATE_CREATION as created_at 
+                     FROM " . $this->table_name . " 
+                     WHERE ROLE != 'admin' 
+                     ORDER BY DATE_CREATION DESC 
+                     LIMIT :limit";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
+    public function getRecentActivity() {
+        // Méthode pour récupérer l'activité récente
+        // Pour l'instant, retourne un tableau vide
+        // À implémenter selon vos besoins spécifiques
+        return [
+            ['action' => 'Nouvel utilisateur inscrit', 'time' => 'Il y a 10 min'],
+            ['action' => 'Nouvelle recette ajoutée', 'time' => 'Il y a 25 min'],
+            ['action' => 'Commentaire signalé', 'time' => 'Il y a 1 heure'],
+            ['action' => 'Mise à jour du système', 'time' => 'Il y a 3 heures'],
+            ['action' => 'Nouvelle fonctionnalité activée', 'time' => 'Il y a 5 heures']
+        ];
     }
 
     public function getAbonnements() {
@@ -186,6 +282,55 @@ class Utilisateur {
                 'message' => 'Erreur de base de données: ' . $e->getMessage()
             ];
         }
+    }
+
+    // ===== MÉTHODES UTILITAIRES =====
+    
+    public function getCurrentUserId() {
+        return $_SESSION['user_id'] ?? null;
+    }
+
+    public function getCurrentUserEmail() {
+        return $_SESSION['user_email'] ?? null;
+    }
+
+    public function getCurrentUserName() {
+        return $_SESSION['user_name'] ?? null;
+    }
+
+    public function getCurrentUserPrenom() {
+        return $_SESSION['user_prenom'] ?? null;
+    }
+
+    public function getCurrentUserRole() {
+        return $_SESSION['user_role'] ?? null;
+    }
+
+    public function getCurrentUserSubscription() {
+        return $_SESSION['user_subscription'] ?? null;
+    }
+
+    public function logout() {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // Détruire toutes les variables de session
+        $_SESSION = array();
+        
+        // Détruire la session
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params["path"], $params["domain"],
+                $params["secure"], $params["httponly"]
+            );
+        }
+        
+        // Détruire la session
+        session_destroy();
+        
+        return true;
     }
 }
 ?>

@@ -6,7 +6,7 @@ $password = "";
 $dbname = "cookbot_recipes";
 
 try {
-    $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
+    $conn = new PDO("mysql:host=$servername;dbname=$dbname;charset=utf8mb4", $username, $password);
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch(PDOException $e) {
     echo json_encode(["error" => "Erreur de connexion: " . $e->getMessage()]);
@@ -15,6 +15,7 @@ try {
 
 // Fonction pour nettoyer les entrées
 function cleanInput($data) {
+    if ($data === null) return null;
     $data = trim($data);
     $data = stripslashes($data);
     $data = htmlspecialchars($data);
@@ -65,57 +66,54 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $procedures = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         if (count($procedures) < 2) {
-            $response['message'] = "Les procédures stockées nécessaires ne sont pas installées. Veuillez exécuter les scripts SQL d'installation.";
-            echo json_encode($response);
-            exit;
-        }
-        
-        // Calculer les besoins caloriques quotidiens
-        $stmt = $conn->prepare("CALL CalculateDailyCalories(?, ?, ?, ?, ?, ?, @calories)");
-        $stmt->bindParam(1, $gender, PDO::PARAM_STR);
-        $stmt->bindParam(2, $weight, PDO::PARAM_STR);
-        $stmt->bindParam(3, $height, PDO::PARAM_STR);
-        $stmt->bindParam(4, $age, PDO::PARAM_INT);
-        $stmt->bindParam(5, $activity_level, PDO::PARAM_STR);
-        $stmt->bindParam(6, $goal, PDO::PARAM_STR);
-        $stmt->execute();
-        
-        // Récupérer les calories calculées
-        $stmt = $conn->query("SELECT @calories as calories");
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $calories = $result['calories'];
-        
-        // Générer le plan de repas
-        $stmt = $conn->prepare("CALL GenerateMealPlan(?, ?, ?)");
-        $stmt->bindParam(1, $calories, PDO::PARAM_INT);
-        $stmt->bindParam(2, $days, PDO::PARAM_INT);
-        $stmt->bindParam(3, $dietary_needs, PDO::PARAM_STR);
-        $stmt->execute();
-        
-        // Récupérer le plan de repas
-        $meal_plan = array();
-        if ($stmt->columnCount() > 0) {
-            $meal_plan = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        }
-        
-        // Passer au résultat suivant (totaux quotidiens)
-        $stmt->nextRowset();
-        $daily_totals = array();
-        if ($stmt->columnCount() > 0) {
-            $daily_totals = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        }
-        
-        // Si aucun repas n'a été trouvé, générer des données de test
-        if (empty($meal_plan)) {
-            // Données de test pour le développement
-            $meal_plan = generateTestMealPlan($days);
+            // Générer des données de test si les procédures n'existent pas
+            $meal_plan = generateTestMealPlan($days, $dietary_needs);
             $daily_totals = generateTestDailyTotals($days);
-        }
-        
-        // Pour chaque recette, récupérer les ingrédients
-        foreach ($meal_plan as &$meal) {
-            // Si c'est une recette de test, les ingrédients sont déjà inclus
-            if (!isset($meal['ingredients'])) {
+            $calories = calculateSimpleCalories($gender, $weight, $height, $age, $activity_level, $goal);
+            
+            $response['success'] = true;
+            $response['message'] = "Plan de repas généré (mode test - veuillez exécuter les scripts SQL)";
+            $response['meal_plan'] = $meal_plan;
+            $response['daily_totals'] = $daily_totals;
+            $response['calories_target'] = $calories;
+        } else {
+            // Calculer les besoins caloriques quotidiens
+            $stmt = $conn->prepare("CALL CalculateDailyCalories(?, ?, ?, ?, ?, ?, @calories)");
+            $stmt->bindParam(1, $gender, PDO::PARAM_STR);
+            $stmt->bindParam(2, $weight, PDO::PARAM_STR);
+            $stmt->bindParam(3, $height, PDO::PARAM_STR);
+            $stmt->bindParam(4, $age, PDO::PARAM_INT);
+            $stmt->bindParam(5, $activity_level, PDO::PARAM_STR);
+            $stmt->bindParam(6, $goal, PDO::PARAM_STR);
+            $stmt->execute();
+            
+            // Récupérer les calories calculées
+            $stmt = $conn->query("SELECT @calories as calories");
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $calories = $result['calories'];
+            
+            // Générer le plan de repas
+            $stmt = $conn->prepare("CALL GenerateMealPlan(?, ?, ?)");
+            $stmt->bindParam(1, $calories, PDO::PARAM_INT);
+            $stmt->bindParam(2, $days, PDO::PARAM_INT);
+            $stmt->bindParam(3, $dietary_needs, PDO::PARAM_STR);
+            $stmt->execute();
+            
+            // Récupérer le plan de repas
+            $meal_plan = array();
+            if ($stmt->columnCount() > 0) {
+                $meal_plan = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+            
+            // Passer au résultat suivant (totaux quotidiens)
+            $stmt->nextRowset();
+            $daily_totals = array();
+            if ($stmt->columnCount() > 0) {
+                $daily_totals = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+            
+            // Pour chaque recette, récupérer les ingrédients
+            foreach ($meal_plan as &$meal) {
                 try {
                     $stmt = $conn->prepare("CALL GetRecipeIngredients(?)");
                     $stmt->bindParam(1, $meal['recipe_id'], PDO::PARAM_INT);
@@ -137,54 +135,147 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $meal['instructions'] = "Instructions de préparation pour " . $meal['recipe_title'];
                 }
             }
+            
+            $response['success'] = true;
+            $response['message'] = "Plan de repas généré avec succès";
+            $response['meal_plan'] = $meal_plan;
+            $response['daily_totals'] = $daily_totals;
+            $response['calories_target'] = $calories;
         }
         
-        // Préparer la réponse
+    } catch(PDOException $e) {
+        // En cas d'erreur, générer des données de test
+        $meal_plan = generateTestMealPlan($days, $dietary_needs);
+        $daily_totals = generateTestDailyTotals($days);
+        $calories = calculateSimpleCalories($gender, $weight, $height, $age, $activity_level, $goal);
+        
         $response['success'] = true;
-        $response['message'] = "Plan de repas généré avec succès";
+        $response['message'] = "Plan de repas de test généré (erreur DB: " . $e->getMessage() . ")";
         $response['meal_plan'] = $meal_plan;
         $response['daily_totals'] = $daily_totals;
         $response['calories_target'] = $calories;
-        
-    } catch(PDOException $e) {
-        $response['message'] = "Erreur lors de la génération du plan de repas: " . $e->getMessage();
-        
-        // En cas d'erreur, générer des données de test
-        $meal_plan = generateTestMealPlan($days);
-        $daily_totals = generateTestDailyTotals($days);
-        
-        $response['success'] = true; // Pour le développement, on considère que c'est un succès
-        $response['message'] = "Plan de repas de test généré (mode développement)";
-        $response['meal_plan'] = $meal_plan;
-        $response['daily_totals'] = $daily_totals;
-        $response['calories_target'] = 2000; // Valeur par défaut
     }
     
     // Fermer la connexion
     $conn = null;
 }
 
+// Fonction pour calculer les calories de manière simple
+function calculateSimpleCalories($gender, $weight, $height, $age, $activity_level, $goal) {
+    // Calcul BMR avec la formule de Mifflin-St Jeor
+    if ($gender === 'homme') {
+        $bmr = (10 * $weight) + (6.25 * $height) - (5 * $age) + 5;
+    } else {
+        $bmr = (10 * $weight) + (6.25 * $height) - (5 * $age) - 161;
+    }
+    
+    // Multiplicateur d'activité
+    $activity_multipliers = [
+        'sedentaire' => 1.2,
+        'legerement_actif' => 1.375,
+        'moderement_actif' => 1.55,
+        'tres_actif' => 1.725,
+        'extremement_actif' => 1.9
+    ];
+    
+    $multiplier = $activity_multipliers[$activity_level] ?? 1.2;
+    $tdee = $bmr * $multiplier;
+    
+    // Ajustement selon l'objectif
+    switch ($goal) {
+        case 'perte_poids':
+            $tdee *= 0.8; // -20%
+            break;
+        case 'prise_muscle':
+            $tdee *= 1.15; // +15%
+            break;
+        default:
+            // maintien - pas de changement
+            break;
+    }
+    
+    return round($tdee);
+}
+
 // Fonction pour générer un plan de repas de test
-function generateTestMealPlan($days) {
+function generateTestMealPlan($days, $dietary_needs = 'standard') {
     $meal_plan = [];
     $meal_types = ['petit-déjeuner', 'déjeuner', 'collation', 'dîner'];
+    
+    // Adapter les recettes selon les restrictions alimentaires
     $recipe_titles = [
-        'petit-déjeuner' => ['Omelette aux légumes', 'Pancakes protéinés', 'Smoothie bowl aux fruits', 'Porridge aux fruits rouges'],
-        'déjeuner' => ['Salade César au poulet', 'Bowl de quinoa aux légumes', 'Wrap au saumon fumé', 'Pâtes complètes à la sauce tomate'],
-        'collation' => ['Yaourt grec et fruits', 'Poignée d\'amandes', 'Barre protéinée maison', 'Pomme et beurre de cacahuète'],
-        'dîner' => ['Saumon grillé et légumes rôtis', 'Curry de légumes et tofu', 'Poulet rôti et purée de patates douces', 'Risotto aux champignons']
+        'petit-déjeuner' => [
+            'standard' => ['Omelette aux légumes', 'Pancakes protéinés', 'Smoothie bowl aux fruits', 'Porridge aux fruits rouges'],
+            'Végétarien' => ['Smoothie bowl aux fruits', 'Porridge aux fruits rouges', 'Toast avocat', 'Yaourt grec aux noix'],
+            'Végétalien' => ['Smoothie bowl aux fruits', 'Porridge au lait d\'amande', 'Toast avocat', 'Chia pudding'],
+            'Keto' => ['Omelette au fromage', 'Avocat aux œufs', 'Smoothie coco-épinards', 'Pancakes keto'],
+            'Sans gluten' => ['Omelette aux légumes', 'Smoothie bowl aux fruits', 'Porridge sans gluten', 'Yaourt aux fruits']
+        ],
+        'déjeuner' => [
+            'standard' => ['Salade César au poulet', 'Bowl de quinoa aux légumes', 'Wrap au saumon fumé', 'Pâtes complètes à la sauce tomate'],
+            'Végétarien' => ['Bowl de quinoa aux légumes', 'Salade de lentilles', 'Wrap aux légumes grillés', 'Pâtes aux légumes'],
+            'Végétalien' => ['Bowl de quinoa aux légumes', 'Salade de lentilles', 'Buddha bowl', 'Curry de légumes'],
+            'Keto' => ['Salade César sans croûtons', 'Saumon aux légumes verts', 'Salade d\'avocat au thon', 'Courgetti bolognaise'],
+            'Sans gluten' => ['Salade César sans croûtons', 'Bowl de quinoa aux légumes', 'Saumon aux légumes', 'Riz sauté aux légumes']
+        ],
+        'collation' => [
+            'standard' => ['Yaourt grec et fruits', 'Poignée d\'amandes', 'Barre protéinée maison', 'Pomme et beurre de cacahuète'],
+            'Végétarien' => ['Yaourt grec et fruits', 'Poignée d\'amandes', 'Hummus et légumes', 'Smoothie protéiné'],
+            'Végétalien' => ['Yaourt de coco et fruits', 'Poignée d\'amandes', 'Hummus et légumes', 'Smoothie aux graines'],
+            'Keto' => ['Avocat aux noix', 'Fromage et olives', 'Beurre d\'amande', 'Œuf dur'],
+            'Sans gluten' => ['Yaourt grec et fruits', 'Poignée d\'amandes', 'Fruits secs', 'Smoothie aux fruits']
+        ],
+        'dîner' => [
+            'standard' => ['Saumon grillé et légumes rôtis', 'Curry de légumes et tofu', 'Poulet rôti et purée de patates douces', 'Risotto aux champignons'],
+            'Végétarien' => ['Curry de légumes et tofu', 'Risotto aux champignons', 'Gratin de légumes', 'Quiche aux épinards'],
+            'Végétalien' => ['Curry de légumes et tofu', 'Risotto aux champignons végétal', 'Ratatouille', 'Buddha bowl du soir'],
+            'Keto' => ['Saumon grillé et brocolis', 'Poulet aux courgettes', 'Bœuf aux légumes verts', 'Salade de thon à l\'avocat'],
+            'Sans gluten' => ['Saumon grillé et légumes rôtis', 'Curry de légumes et riz', 'Poulet aux légumes', 'Salade complète']
+        ]
     ];
+    
+    // Utiliser les recettes standard si la restriction n'est pas définie
+    $selected_recipes = $recipe_titles;
+    foreach ($recipe_titles as $meal_type => $recipes_by_diet) {
+        if (isset($recipes_by_diet[$dietary_needs])) {
+            $selected_recipes[$meal_type] = $recipes_by_diet[$dietary_needs];
+        } else {
+            $selected_recipes[$meal_type] = $recipes_by_diet['standard'];
+        }
+    }
     
     for ($day = 1; $day <= $days; $day++) {
         foreach ($meal_types as $meal_type) {
-            $recipe_index = array_rand($recipe_titles[$meal_type]);
-            $recipe_title = $recipe_titles[$meal_type][$recipe_index];
+            $recipe_index = array_rand($selected_recipes[$meal_type]);
+            $recipe_title = $selected_recipes[$meal_type][$recipe_index];
             
-            // Générer des valeurs nutritionnelles aléatoires
-            $calories = rand(200, 600);
-            $proteins = rand(10, 30);
-            $carbs = rand(20, 60);
-            $fats = rand(5, 25);
+            // Générer des valeurs nutritionnelles selon le type de repas et les restrictions
+            switch ($meal_type) {
+                case 'petit-déjeuner':
+                    $calories = ($dietary_needs === 'Keto') ? rand(300, 450) : rand(250, 400);
+                    $proteins = ($dietary_needs === 'Keto') ? rand(20, 30) : rand(15, 25);
+                    $carbs = ($dietary_needs === 'Keto') ? rand(5, 15) : rand(30, 50);
+                    $fats = ($dietary_needs === 'Keto') ? rand(25, 35) : rand(8, 15);
+                    break;
+                case 'déjeuner':
+                    $calories = ($dietary_needs === 'Keto') ? rand(450, 650) : rand(400, 600);
+                    $proteins = ($dietary_needs === 'Keto') ? rand(35, 50) : rand(25, 40);
+                    $carbs = ($dietary_needs === 'Keto') ? rand(10, 20) : rand(40, 70);
+                    $fats = ($dietary_needs === 'Keto') ? rand(30, 45) : rand(12, 25);
+                    break;
+                case 'collation':
+                    $calories = ($dietary_needs === 'Keto') ? rand(200, 300) : rand(150, 250);
+                    $proteins = ($dietary_needs === 'Keto') ? rand(12, 20) : rand(8, 15);
+                    $carbs = ($dietary_needs === 'Keto') ? rand(3, 8) : rand(15, 30);
+                    $fats = ($dietary_needs === 'Keto') ? rand(15, 25) : rand(5, 12);
+                    break;
+                case 'dîner':
+                    $calories = ($dietary_needs === 'Keto') ? rand(500, 700) : rand(450, 650);
+                    $proteins = ($dietary_needs === 'Keto') ? rand(40, 55) : rand(30, 45);
+                    $carbs = ($dietary_needs === 'Keto') ? rand(8, 18) : rand(35, 60);
+                    $fats = ($dietary_needs === 'Keto') ? rand(35, 50) : rand(15, 28);
+                    break;
+            }
             
             $meal_plan[] = [
                 'day_number' => $day,
@@ -196,9 +287,9 @@ function generateTestMealPlan($days) {
                 'carbs' => $carbs,
                 'fats' => $fats,
                 'ingredients' => [
-                    ['NOM' => 'Ingrédient 1', 'QUANTITE' => '100', 'UNITE' => 'g'],
-                    ['NOM' => 'Ingrédient 2', 'QUANTITE' => '2', 'UNITE' => 'cuillères à soupe'],
-                    ['NOM' => 'Ingrédient 3', 'QUANTITE' => '1', 'UNITE' => 'pièce']
+                    ['NOM' => 'Ingrédient principal', 'QUANTITE' => '150', 'UNITE' => 'g'],
+                    ['NOM' => 'Légumes', 'QUANTITE' => '100', 'UNITE' => 'g'],
+                    ['NOM' => 'Assaisonnement', 'QUANTITE' => '1', 'UNITE' => 'cuillère à soupe']
                 ],
                 'instructions' => "1. Préparer les ingrédients\n2. Cuire selon les instructions\n3. Servir et déguster"
             ];

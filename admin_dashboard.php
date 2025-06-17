@@ -447,9 +447,8 @@ $recent_activity = $user->getRecentActivity();
     <div class="sidebar">
         <div class="logo">
             <img src="images/cutlery.png" alt="CookBot Logo">
-            <div class="logo-text"><span>Cook</span>Bot</div>
+            <div class="logo-text"><a href="homepage.php" style="text-decoration:none"><span>Cook</span>Bot</div></a>
         </div>
-        
         <a href="admin_dashboard.php" class="menu-item active">
             <i class="fas fa-chart-line"></i>
             Tableau de bord

@@ -35,9 +35,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $message_type = $result['success'] ? 'success' : 'error';
         
         if ($result['success']) {
-            header('Location: index2.php');
-            exit();
-        }
+    // Si l'utilisateur est admin → dashboard.php
+    if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
+        header('Location: admin_dashboard.php');
+    } else {
+        // Sinon → index2.php (utilisateurs normaux)
+        header('Location: index2.php');
+    }
+    exit();
+}
     } catch (Exception $e) {
         $message = 'Erreur: ' . $e->getMessage();
         $message_type = 'error';
