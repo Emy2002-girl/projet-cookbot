@@ -2,7 +2,6 @@
 session_start();
 require_once 'config.php';
 require_once 'user.php';
-
 // Vérifier si l'utilisateur est connecté et est un administrateur
 $database = new Database();
 $db = $database->getConnection();
