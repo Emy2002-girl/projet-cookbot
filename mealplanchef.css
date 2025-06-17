@@ -307,6 +307,7 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     border: 1px solid #e5e7eb;
     line-height: 13px;
+    margin-top: 6rem;
   }
   
   /* Labels */
@@ -347,17 +348,17 @@
     background-position: right 0.75rem center;
     background-size: 16px;
     width: 190px;
-    margin-top: 17rem;
+    margin-top: 8rem;
     margin-left: 3rem;
   }
   .duree{
     line-height: 13px;
-    margin-top: 15rem;
+    margin-top: 8rem;
     margin-left: 3rem;
   }
   /* Bouton de génération */
   #generate-recipes {
-    width: 100%;
+    width: 85%;
     padding: 1rem 2rem;
     background-color: #10b981;
     border: none;
@@ -368,6 +369,8 @@
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+    margin-top: 8rem;
+    margin-left: 4rem;
   }
   
   #generate-recipes:hover {
@@ -1055,4 +1058,13 @@
   .text-dark {
     color: #111827;
   }
+.generer{
+  width: 50%;
   
+}
+.generer p {
+  color: #6b7280;
+    font-size: 1.125rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}

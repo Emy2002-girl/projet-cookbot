@@ -153,7 +153,11 @@ $initial = $user_logged_in ? strtoupper(substr($user_prenom, 0, 1)) : '';
                 </li>
                 
                 <li class="nav-item">
-                    <a href="#" class="nav-link">Blog</a>
+                    <a href="tarification.php" class="nav-link">Tarification</a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="blog.php" class="nav-link">Blog</a>
                 </li>
             </ul>
             <div class="header-right">
