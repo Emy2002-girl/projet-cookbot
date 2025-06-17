@@ -82,7 +82,7 @@
     <div class="welcome-message">
         <h2>Bienvenue sur CookBot, <?php echo htmlspecialchars($_SESSION['user_name']); ?> !</h2>
         <p>Votre profil est maintenant configuré !</p>
-        <button class="btn-primary" onclick="window.location.href='homeutilisateur.php'">Commencer Votre Expérience Avec CookBot</button>
+        <button class="btn-primary" onclick="window.location.href='homepage.php'">Commencer Votre Expérience Avec CookBot</button>
     </div>
     <?php endif; ?>
 </body>

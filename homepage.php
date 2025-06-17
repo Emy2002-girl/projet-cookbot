@@ -1,7 +1,7 @@
 <?php
 session_start();
 $user_logged_in = isset($_SESSION['user_id']);
-$user_email = $user_logged_in ? $_SESSION['user_email'] : '';
+$user_email = $user_logged_in ? ($_SESSION['user_email'] ?? '') : '';
 $user_name = $user_logged_in ? ($_SESSION['user_name'] ?? '') : '';
 $user_prenom = $user_logged_in ? ($_SESSION['user_prenom'] ?? '') : '';
 $initial = $user_logged_in ? strtoupper(substr($user_prenom, 0, 1)) : '';
