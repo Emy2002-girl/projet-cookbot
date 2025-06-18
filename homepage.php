@@ -162,7 +162,7 @@ $initial = $user_logged_in ? strtoupper(substr($user_prenom, 0, 1)) : '';
             </ul>
             <div class="header-right">
                 <span style="border: 1px solid gainsboro; padding: 0.5rem 0.75rem; border-radius: 18px;">FR</span>
-                <span style="border: 1px solid gainsboro; padding: 0.5rem 0.75rem; border-radius: 18px;"><img src="images/sun.png" alt="" width="17" height="17" margin-top="5px"></span>
+                <span style="border: 1px solid gainsboro;padding: 0.7rem 0.75rem;border-radius: 18px;display: flex;justify-content: center;"><img src="images/sun.png" alt="" width="17" height="17" margin-top="5px"></span>
                 
                 <?php if ($user_logged_in): ?>
                 <!-- Menu utilisateur -->

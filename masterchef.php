@@ -169,7 +169,7 @@ $initial = $user_logged_in ? strtoupper(substr($user_prenom, 0, 1)) : '';
             
             <div class="header-right">
                 <span class="header-btn">FR</span>
-                <span class="header-btn">
+                <span class="head-btn" style=" border: 1px solid gainsboro;padding: 0.7rem 0.75rem;border-radius: 18px;display: flex;align-items: center;justify-content: center;min-width: 40px;">
                     <img src="images/sun.png" alt="Thème clair" width="17" height="17">
                 </span>
                 

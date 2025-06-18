@@ -212,21 +212,21 @@ body {
     transition: background 0.2s;
     cursor: pointer;
 }
-
 .btn-primary:hover {
     background: #059669;
 }
 .hero {
     position: relative;
-    height: 800px;
+    height: 100vh; /* Plein écran vertical */
     display: flex;
     align-items: center;
     justify-content: center;
-    background-image: url('images/freepik__upload__26279.png');
-    /* background-size: cover; */
+    background-image: url("images/background.jpg");
+    background-size: cover; /* Couvre tout l'écran */
     background-position: center;
-}
-
+    background-repeat: no-repeat;
+    background-attachment: fixed; /* Effet parallax optionnel */
+  }
 .hero::before {
     content: '';
     position: absolute;
