@@ -281,7 +281,7 @@ $initial = $user_logged_in ? strtoupper(substr($user_prenom, 0, 1)) : '';
     <section class="pantry-chef">
         <div class="pantry-chef-container">
             <div class="pantry-chef-content">
-                <div class="pantry-chef-icon"><img src="imagesOverlay (3).png" alt="" width="56" height="56"></div>
+                <div class="pantry-chef-icon"><img src="images/Overlay (3).png" alt="" width="56" height="56"></div>
                 <h3>MacrosChef</h3>
                 <p>
                     MacrosChef est l'outil parfait pour toute personne cherchant à atteindre ses objectifs en matière de
@@ -350,7 +350,7 @@ $initial = $user_logged_in ? strtoupper(substr($user_prenom, 0, 1)) : '';
                         "Recettes délicieuses et faciles à suivre ! Ma famille adore mes nouveaux plats."
                     </p>
                     <div class="author">
-                        <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=60&h=60&fit=crop&crop=face"
+                        <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=60&h=60&fit=crop&crop=face"
                             alt="Marie L." class="author-avatar">
                         <div class="author-info">
                             <h4 class="author-name">Marie L.</h4>

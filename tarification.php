@@ -15,8 +15,7 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color:black;
             min-height: 100vh;
         }
 
@@ -46,7 +45,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            color: white;
+            color: black;
             font-size: 1.5rem;
             font-weight: 700;
             text-decoration: none;
@@ -64,7 +63,7 @@
         }
 
         .nav-links a {
-            color: white;
+            color: black;
             text-decoration: none;
             font-weight: 500;
             transition: opacity 0.3s;
@@ -82,7 +81,7 @@
         .btn-outline {
             padding: 0.5rem 1rem;
             border: 2px solid white;
-            color: white;
+            color: black;
             text-decoration: none;
             border-radius: 25px;
             transition: all 0.3s;
@@ -112,7 +111,7 @@
         .hero {
             text-align: center;
             padding: 4rem 0;
-            color: white;
+            color: black;
         }
 
         .hero h1 {
@@ -183,7 +182,7 @@
 
         .discount-badge {
             background: #10B981;
-            color: white;
+            color: black;
             padding: 0.25rem 0.75rem;
             border-radius: 15px;
             font-size: 0.8rem;
@@ -230,7 +229,7 @@
             left: 0;
             right: 0;
             background: #10B981;
-            color: white;
+            color: black;
             text-align: center;
             padding: 0.5rem;
             font-weight: 600;
@@ -290,7 +289,7 @@
             width: 100%;
             padding: 1rem;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            color: black;
             border: none;
             border-radius: 12px;
             font-size: 1.1rem;
@@ -348,7 +347,7 @@
 
         .faq-title {
             text-align: center;
-            color: white;
+            color: black;
             font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 3rem;
@@ -368,7 +367,7 @@
         }
 
         .faq-question {
-            color: white;
+            color: black;
             font-size: 1.2rem;
             font-weight: 600;
             margin-bottom: 1rem;
@@ -382,7 +381,7 @@
         /* Footer */
         .footer {
             background: rgba(0,0,0,0.2);
-            color: white;
+            color: black;
             text-align: center;
             padding: 2rem 0;
             margin-top: 2rem;
