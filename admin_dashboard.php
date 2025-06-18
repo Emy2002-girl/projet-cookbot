@@ -2,6 +2,7 @@
 session_start();
 require_once 'config.php';
 require_once 'user.php';
+
 // Vérifier si l'utilisateur est connecté et est un administrateur
 $database = new Database();
 $db = $database->getConnection();
@@ -10,6 +11,43 @@ $user = new Utilisateur($db);
 if (!$user->isLoggedIn() || !$user->isAdmin()) {
     header('Location: login.php');
     exit();
+}
+
+// Traitement des actions AJAX
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    header('Content-Type: application/json');
+    
+    switch ($_POST['action']) {
+        case 'get_users':
+            $search = $_POST['search'] ?? '';
+            $role_filter = $_POST['role_filter'] ?? '';
+            $users = $user->getFilteredUsers($search, $role_filter);
+            echo json_encode(['success' => true, 'users' => $users]);
+            exit;
+            
+        case 'delete_user':
+            $user_id = $_POST['user_id'] ?? 0;
+            $result = $user->deleteUser($user_id);
+            echo json_encode($result);
+            exit;
+            
+        case 'get_user_details':
+            $user_id = $_POST['user_id'] ?? 0;
+            $user_details = $user->getUserById($user_id);
+            echo json_encode(['success' => true, 'user' => $user_details]);
+            exit;
+            
+        case 'update_user':
+            $user_id = $_POST['user_id'] ?? 0;
+            $data = [
+                'nom' => $_POST['nom'] ?? '',
+                'email' => $_POST['email'] ?? '',
+                'role' => $_POST['role'] ?? 'utilisateur'
+            ];
+            $result = $user->updateUser($user_id, $data);
+            echo json_encode($result);
+            exit;
+    }
 }
 
 // Récupérer les statistiques pour le tableau de bord
@@ -308,10 +346,114 @@ $recent_activity = $user->getRecentActivity();
             cursor: pointer;
             color: #6b7280;
             margin-right: 5px;
+            padding: 5px;
+            border-radius: 3px;
+            transition: all 0.2s;
         }
         
         .action-btn:hover {
             color: #10B981;
+            background-color: #f0f9f6;
+        }
+        
+        .action-btn.delete:hover {
+            color: #ef4444;
+            background-color: #fee2e2;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+        
+        .close {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        
+        .btn-primary {
+            background-color: #10B981;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+        }
+        
+        .alert {
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .alert-success {
+            background-color: #d1fae5;
+            color: #10B981;
+            border: 1px solid #10B981;
+        }
+        
+        .alert-error {
+            background-color: #fee2e2;
+            color: #ef4444;
+            border: 1px solid #ef4444;
         }
         
         /* Subscription Plans */
@@ -605,16 +747,12 @@ $recent_activity = $user->getRecentActivity();
                     <div class="section-header">
                         <div class="section-title">Gestion des utilisateurs</div>
                         <div class="search-filter">
-                            <input type="text" class="search-input" placeholder="Rechercher...">
-                            <select class="filter-select">
-                                <option>Tous rôles</option>
-                                <option>Utilisateur</option>
-                                <option>Administrateur</option>
-                            </select>
-                            <select class="filter-select">
-                                <option>Tous statuts</option>
-                                <option>Actif</option>
-                                <option>Inactif</option>
+                            <input type="text" id="searchInput" class="search-input" placeholder="Rechercher par nom ou email...">
+                            <select id="roleFilter" class="filter-select">
+                                <option value="">Tous rôles</option>
+                                <option value="utilisateur">Utilisateur</option>
+                                <option value="administrateur">Administrateur</option>
+                                <option value="chef">Chef</option>
                             </select>
                         </div>
                     </div>
@@ -625,34 +763,13 @@ $recent_activity = $user->getRecentActivity();
                                 <th>Nom</th>
                                 <th>Email</th>
                                 <th>Rôle</th>
-                                <th>Statut</th>
+                                <th>Abonnement</th>
                                 <th>Date inscription</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <?php
-                            // Récupérer les utilisateurs récents
-                            $recent_users = $user->getRecentUsers(5);
-                            if (!empty($recent_users)) {
-                                foreach ($recent_users as $recent_user) {
-                                    echo '<tr>';
-                                    echo '<td>' . htmlspecialchars($recent_user['prenom'] . ' ' . $recent_user['nom']) . '</td>';
-                                    echo '<td>' . htmlspecialchars($recent_user['email']) . '</td>';
-                                    echo '<td>Utilisateur</td>';
-                                    echo '<td><span class="status active">Actif</span></td>';
-                                    echo '<td>' . htmlspecialchars(date('d/m/Y', strtotime($recent_user['created_at']))) . '</td>';
-                                    echo '<td>
-                                            <button class="action-btn"><i class="fas fa-eye"></i></button>
-                                            <button class="action-btn"><i class="fas fa-edit"></i></button>
-                                            <button class="action-btn"><i class="fas fa-trash"></i></button>
-                                          </td>';
-                                    echo '</tr>';
-                                }
-                            } else {
-                                echo '<tr><td colspan="6">Aucun utilisateur trouvé</td></tr>';
-                            }
-                            ?>
+                        <tbody id="usersTableBody">
+                            <!-- Les utilisateurs seront chargés ici via JavaScript -->
                         </tbody>
                     </table>
                 </div>
@@ -775,8 +892,281 @@ $recent_activity = $user->getRecentActivity();
             </div>
         </div>
     </div>
+
+    <!-- Modal pour éditer un utilisateur -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Modifier l'utilisateur</h2>
+            <div id="editUserAlert"></div>
+            <form id="editUserForm">
+                <input type="hidden" id="editUserId">
+                <div class="form-group">
+                    <label for="editUserNom">Nom:</label>
+                    <input type="text" id="editUserNom" required>
+                </div>
+                <div class="form-group">
+                    <label for="editUserEmail">Email:</label>
+                    <input type="email" id="editUserEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="editUserRole">Rôle:</label>
+                    <select id="editUserRole">
+                        <option value="utilisateur">Utilisateur</option>
+                        <option value="administrateur">Administrateur</option>
+                        <option value="chef">Chef</option>
+                    </select>
+                </div>
+                <div>
+                    <button type="submit" class="btn btn-primary">Sauvegarder</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de confirmation de suppression -->
+    <div id="deleteUserModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Confirmer la suppression</h2>
+            <p>Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.</p>
+            <div>
+                <button id="confirmDeleteBtn" class="btn btn-danger">Supprimer</button>
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentUsers = [];
+        let userToDelete = null;
+
+        // Charger les utilisateurs au démarrage
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUsers();
+            
+            // Événements pour les filtres
+            document.getElementById('searchInput').addEventListener('input', debounce(loadUsers, 300));
+            document.getElementById('roleFilter').addEventListener('change', loadUsers);
+            
+            // Événements pour les modals
+            document.querySelectorAll('.close').forEach(closeBtn => {
+                closeBtn.addEventListener('click', function() {
+                    this.closest('.modal').style.display = 'none';
+                });
+            });
+            
+            // Fermer les modals en cliquant à l'extérieur
+            window.addEventListener('click', function(event) {
+                if (event.target.classList.contains('modal')) {
+                    event.target.style.display = 'none';
+                }
+            });
+            
+            // Formulaire d'édition
+            document.getElementById('editUserForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                updateUser();
+            });
+            
+            // Confirmation de suppression
+            document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+                if (userToDelete) {
+                    deleteUser(userToDelete);
+                }
+            });
+        });
+
+        // Fonction debounce pour éviter trop de requêtes
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Charger les utilisateurs avec filtres
+        function loadUsers() {
+            const search = document.getElementById('searchInput').value;
+            const roleFilter = document.getElementById('roleFilter').value;
+            
+            const formData = new FormData();
+            formData.append('action', 'get_users');
+            formData.append('search', search);
+            formData.append('role_filter', roleFilter);
+            
+            fetch('admin_dashboard.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentUsers = data.users;
+                    displayUsers(data.users);
+                } else {
+                    console.error('Erreur lors du chargement des utilisateurs');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        }
+
+        // Afficher les utilisateurs dans le tableau
+        function displayUsers(users) {
+            const tbody = document.getElementById('usersTableBody');
+            
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Aucun utilisateur trouvé</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td>${escapeHtml(user.nom)}</td>
+                    <td>${escapeHtml(user.email)}</td>
+                    <td>${user.role === 'administrateur' ? 'Administrateur' : (user.role === 'chef' ? 'Chef' : 'Utilisateur')}</td>
+                    <td>${user.abonnement || 'Gratuit'}</td>
+                    <td>${formatDate(user.date_creation)}</td>
+                    <td>
+                        <button class="action-btn" onclick="editUser(${user.id_utilisateur})" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        ${user.role !== 'administrateur' ? `
+                        <button class="action-btn delete" onclick="confirmDeleteUser(${user.id_utilisateur})" title="Supprimer">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        ` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Modifier un utilisateur
+        function editUser(userId) {
+            const formData = new FormData();
+            formData.append('action', 'get_user_details');
+            formData.append('user_id', userId);
+            
+            fetch('admin_dashboard.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.user) {
+                    const user = data.user;
+                    document.getElementById('editUserId').value = user.ID_UTILISATEUR;
+                    document.getElementById('editUserNom').value = user.NOM;
+                    document.getElementById('editUserEmail').value = user.EMAIL;
+                    document.getElementById('editUserRole').value = user.ROLE;
+                    document.getElementById('editUserModal').style.display = 'block';
+                    document.getElementById('editUserAlert').innerHTML = '';
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        }
+
+        // Mettre à jour un utilisateur
+        function updateUser() {
+            const formData = new FormData();
+            formData.append('action', 'update_user');
+            formData.append('user_id', document.getElementById('editUserId').value);
+            formData.append('nom', document.getElementById('editUserNom').value);
+            formData.append('email', document.getElementById('editUserEmail').value);
+            formData.append('role', document.getElementById('editUserRole').value);
+            
+            fetch('admin_dashboard.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('editUserAlert').innerHTML = 
+                        '<div class="alert alert-success">Utilisateur mis à jour avec succès!</div>';
+                    setTimeout(() => {
+                        closeEditModal();
+                        loadUsers();
+                    }, 1500);
+                } else {
+                    document.getElementById('editUserAlert').innerHTML = 
+                        `<div class="alert alert-error">${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                document.getElementById('editUserAlert').innerHTML = 
+                    '<div class="alert alert-error">Erreur lors de la mise à jour</div>';
+            });
+        }
+
+        // Confirmer la suppression d'un utilisateur
+        function confirmDeleteUser(userId) {
+            userToDelete = userId;
+            document.getElementById('deleteUserModal').style.display = 'block';
+        }
+
+        // Supprimer un utilisateur
+        function deleteUser(userId) {
+            const formData = new FormData();
+            formData.append('action', 'delete_user');
+            formData.append('user_id', userId);
+            
+            fetch('admin_dashboard.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeDeleteModal();
+                    loadUsers();
+                } else {
+                    alert('Erreur lors de la suppression: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        }
+
+        // Fermer les modals
+        function closeEditModal() {
+            document.getElementById('editUserModal').style.display = 'none';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteUserModal').style.display = 'none';
+            userToDelete = null;
+        }
+
+        // Fonctions utilitaires
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('fr-FR');
+        }
+    </script>
 </body>
 </html>
-
-
-

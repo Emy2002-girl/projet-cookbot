@@ -5,453 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tarification - CookBot</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color:black;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        /* Header */
-        .header {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 1rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: black;
-            font-size: 1.5rem;
-            font-weight: 700;
-            text-decoration: none;
-        }
-
-        .logo img {
-            width: 35px;
-            height: 35px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: black;
-            text-decoration: none;
-            font-weight: 500;
-            transition: opacity 0.3s;
-        }
-
-        .nav-links a:hover {
-            opacity: 0.8;
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .btn-outline {
-            padding: 0.5rem 1rem;
-            border: 2px solid white;
-            color: black;
-            text-decoration: none;
-            border-radius: 25px;
-            transition: all 0.3s;
-        }
-
-        .btn-outline:hover {
-            background: white;
-            color: #667eea;
-        }
-
-        .btn-primary {
-            padding: 0.5rem 1rem;
-            background: white;
-            color: #667eea;
-            text-decoration: none;
-            border-radius: 25px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        /* Hero Section */
-        .hero {
-            text-align: center;
-            padding: 4rem 0;
-            color: black;
-        }
-
-        .hero h1 {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin-bottom: 1rem;
-            background: linear-gradient(45deg, #fff, #f0f0f0);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .billing-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-            margin-bottom: 3rem;
-        }
-
-        .toggle-switch {
-            position: relative;
-            width: 60px;
-            height: 30px;
-            background: rgba(255,255,255,0.3);
-            border-radius: 15px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .toggle-switch.active {
-            background: #10B981;
-        }
-
-        .toggle-slider {
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 24px;
-            height: 24px;
-            background: white;
-            border-radius: 50%;
-            transition: all 0.3s;
-        }
-
-        .toggle-switch.active .toggle-slider {
-            transform: translateX(30px);
-        }
-
-        .billing-label {
-            font-weight: 600;
-            opacity: 0.7;
-            transition: opacity 0.3s;
-        }
-
-        .billing-label.active {
-            opacity: 1;
-        }
-
-        .discount-badge {
-            background: #10B981;
-            color: black;
-            padding: 0.25rem 0.75rem;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-left: 0.5rem;
-        }
-
-        /* Pricing Cards */
-        .pricing-section {
-            padding: 2rem 0 4rem;
-        }
-
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-
-        .pricing-card {
-            background: white;
-            border-radius: 20px;
-            padding: 2.5rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .pricing-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-        }
-
-        .pricing-card.popular {
-            border: 3px solid #10B981;
-            transform: scale(1.05);
-        }
-
-        .pricing-card.popular::before {
-            content: "Le plus populaire";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: #10B981;
-            color: black;
-            text-align: center;
-            padding: 0.5rem;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .pricing-card.popular .card-content {
-            margin-top: 1rem;
-        }
-
-        .plan-name {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            color: #333;
-        }
-
-        .plan-description {
-            color: #666;
-            margin-bottom: 2rem;
-            font-size: 0.95rem;
-        }
-
-        .price {
-            display: flex;
-            align-items: baseline;
-            margin-bottom: 2rem;
-        }
-
-        .price-amount {
-            font-size: 3rem;
-            font-weight: 800;
-            color: #333;
-        }
-
-        .price-currency {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #666;
-            margin-right: 0.25rem;
-        }
-
-        .price-period {
-            font-size: 1rem;
-            color: #666;
-            margin-left: 0.25rem;
-        }
-
-        .price-original {
-            text-decoration: line-through;
-            color: #999;
-            font-size: 1.2rem;
-            margin-left: 1rem;
-        }
-
-        .cta-button {
-            width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: black;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 2rem;
-        }
-
-        .cta-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .pricing-card.popular .cta-button {
-            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-        }
-
-        .pricing-card.popular .cta-button:hover {
-            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
-        }
-
-        .features-list {
-            list-style: none;
-        }
-
-        .features-list li {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1rem;
-            font-size: 0.95rem;
-        }
-
-        .features-list li i {
-            color: #10B981;
-            margin-right: 0.75rem;
-            font-size: 1.1rem;
-        }
-
-        .features-list li.unavailable {
-            opacity: 0.5;
-        }
-
-        .features-list li.unavailable i {
-            color: #ccc;
-        }
-
-        /* FAQ Section */
-        .faq-section {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            padding: 4rem 0;
-            margin-top: 2rem;
-        }
-
-        .faq-title {
-            text-align: center;
-            color: black;
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 3rem;
-        }
-
-        .faq-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 2rem;
-        }
-
-        .faq-item {
-            background: rgba(255,255,255,0.1);
-            padding: 2rem;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-        }
-
-        .faq-question {
-            color: black;
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-        }
-
-        .faq-answer {
-            color: rgba(255,255,255,0.9);
-            line-height: 1.6;
-        }
-
-        /* Footer */
-        .footer {
-            background: rgba(0,0,0,0.2);
-            color: black;
-            text-align: center;
-            padding: 2rem 0;
-            margin-top: 2rem;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-
-            .pricing-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .pricing-card.popular {
-                transform: none;
-            }
-
-            .nav-links {
-                display: none;
-            }
-
-            .faq-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .pricing-card {
-            animation: fadeInUp 0.6s ease-out;
-        }
-
-        .pricing-card:nth-child(1) { animation-delay: 0.1s; }
-        .pricing-card:nth-child(2) { animation-delay: 0.2s; }
-        .pricing-card:nth-child(3) { animation-delay: 0.3s; }
-    </style>
+    <link rel="stylesheet" href="tarification.css">
 </head>
 <body>
     <!-- Header -->
     <header class="header">
-        <nav class="nav container">
-            <a href="#" class="logo">
-                <img src="images/cutlery.png" alt="CookBot">
-                <span><span style="color: #10B981;">Cook</span>Bot</span>
-            </a>
-            
-            <ul class="nav-links">
-                <li><a href="#fonctionnalites">Fonctionnalités</a></li>
-                <li><a href="#tarification">Tarification</a></li>
-                <li><a href="#blog">Blog</a></li>
-                <li><a href="#contact">Contact</a></li>
+        <nav class="nav-container">
+            <!-- Logo -->
+            <div class="logo">
+                <a href="homepage.php"><div class="logo-icon"><img src="images/cutlery.png" alt="" width="35" height="35"></div></a>
+                <a href="homepage.php" style="text-decoration:none"><span class="logo-text"><span style="color:#10B981;">Cook</span>Bot</span></a>
+            </div>
+            <!-- Navigation Menu -->
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        Fonctionnalités
+                        <span class="dropdown-arrow"></span>
+                    </a>
+                    
+                    <!-- Dropdown Menu -->
+                    <div class="dropdown-menu">
+                        <a href="pantrychef.php" class="dropdown-item">
+                            <div class="dropdown-icon icon-pantry">🥘</div>
+                            <span class="dropdown-text">PantryChef</span>
+                        </a>
+                        <a href="masterchef.php" class="dropdown-item">
+                            <div class="dropdown-icon icon-master">👨‍🍳</div>
+                            <span class="dropdown-text">MasterChef</span>
+                        </a>
+                        
+                        <a href="macroschef.php" class="dropdown-item">
+                            <div class="dropdown-icon icon-macros">🍌</div>
+                            <span class="dropdown-text">MacrosChef</span>
+                        </a>
+                        
+                        <a href="mealplanchef.php" class="dropdown-item">
+                            <div class="dropdown-icon icon-meal">📅</div>
+                            <span class="dropdown-text">MealPlanChef</span>
+                        </a>
+                    </div>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="tarification.php" class="nav-link">Tarification</a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="blog.php" class="nav-link">Blog</a>
+                </li>
             </ul>
-            
-            <div class="nav-buttons">
-                <a href="login.php" class="btn-outline">Se connecter</a>
+            <div class="header-right">
+                <span style="border: 1px solid gainsboro; padding: 0.5rem 0.75rem; border-radius: 18px;">FR</span>
+                <span style="border: 1px solid gainsboro;padding: 0.7rem 0.75rem;border-radius: 18px;display: flex;justify-content: center;"><img src="images/sun.png" alt="" width="17" height="17" margin-top="5px"></span>
+                <a href="login.php" class="login-link">Se connecter</a>
                 <a href="inscription.php" class="btn-primary">S'inscrire</a>
             </div>
-        </nav>
     </header>
 
     <!-- Hero Section -->
@@ -595,7 +204,7 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2024 CookBot. Tous droits réservés. Fait avec ❤️ pour les passionnés de cuisine.</p>
+            <p>&copy; 2024 CookBot. Tous droits réservés.</p>
         </div>
     </footer>
 

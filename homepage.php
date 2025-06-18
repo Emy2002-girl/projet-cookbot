@@ -4,7 +4,17 @@ $user_logged_in = isset($_SESSION['user_id']);
 $user_email = $user_logged_in ? ($_SESSION['user_email'] ?? '') : '';
 $user_name = $user_logged_in ? ($_SESSION['user_name'] ?? '') : '';
 $user_prenom = $user_logged_in ? ($_SESSION['user_prenom'] ?? '') : '';
-$initial = $user_logged_in ? strtoupper(substr($user_prenom, 0, 1)) : '';
+$initial = '';
+if ($user_logged_in && !empty($user_prenom)) {
+    $initial = strtoupper(substr(trim($user_prenom), 0, 1));
+} elseif ($user_logged_in && !empty($user_name)) {
+    $initial = strtoupper(substr(trim($user_name), 0, 1));
+} elseif ($user_logged_in) {
+    $initial = strtoupper(substr($user_email, 0, 1));
+}
+if (empty($initial)) {
+    $initial = '?';
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -168,8 +178,10 @@ $initial = $user_logged_in ? strtoupper(substr($user_prenom, 0, 1)) : '';
                 <!-- Menu utilisateur -->
                 <div class="user-dropdown">
                 <div class="user-button" id="userButton">
-                <div class="user-avatar"><?php echo htmlspecialchars($initial); ?></div>
-           </div>
+                <div class="user-avatar" title="<?php echo htmlspecialchars($user_prenom . ' ' . $user_name); ?>">
+                            <?php echo htmlspecialchars($initial); ?>
+                        </div>
+                  </div>
                     <div class="user-menu" id="userMenu">
                         <div class="user-menu-header">
                             <div class="user-menu-name"><?php echo htmlspecialchars($user_prenom . ' ' . $user_name); ?></div>

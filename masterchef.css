@@ -105,7 +105,10 @@ img {
   transition: color 0.3s ease;
   white-space: nowrap;
 }
-
+.nav-link.active {
+  color: #10b981 !important;
+  font-weight: 600;
+}
 .nav-link:hover {
   color: #10b981;
 }

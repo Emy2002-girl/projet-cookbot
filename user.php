@@ -332,5 +332,120 @@ class Utilisateur {
         
         return true;
     }
+
+    // ===== MÉTHODES POUR LA GESTION DES UTILISATEURS =====
+
+    public function getFilteredUsers($search = '', $role_filter = '') {
+        try {
+            $query = "SELECT u.ID_UTILISATEUR as id_utilisateur, u.NOM as nom, u.EMAIL as email, 
+                             u.ROLE as role, u.DATE_CREATION as date_creation, a.TYPE_ABONNE as abonnement
+                      FROM " . $this->table_name . " u 
+                      LEFT JOIN abonnement a ON u.ID_ABONNEMENT = a.ID_ABONNEMENT 
+                      WHERE 1=1";
+            
+            $params = [];
+            
+            if (!empty($search)) {
+                $query .= " AND (u.NOM LIKE :search OR u.EMAIL LIKE :search)";
+                $params[':search'] = '%' . $search . '%';
+            }
+            
+            if (!empty($role_filter)) {
+                $query .= " AND u.ROLE = :role";
+                $params[':role'] = $role_filter;
+            }
+            
+            $query .= " ORDER BY u.DATE_CREATION DESC";
+            
+            $stmt = $this->conn->prepare($query);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
+    public function updateUser($user_id, $data) {
+        try {
+            $query = "UPDATE " . $this->table_name . " SET 
+                      NOM = :nom, 
+                      EMAIL = :email, 
+                      ROLE = :role 
+                      WHERE ID_UTILISATEUR = :id";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':nom', $data['nom']);
+            $stmt->bindParam(':email', $data['email']);
+            $stmt->bindParam(':role', $data['role']);
+            $stmt->bindParam(':id', $user_id);
+            
+            if ($stmt->execute()) {
+                return [
+                    'success' => true,
+                    'message' => 'Utilisateur mis à jour avec succès'
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Erreur lors de la mise à jour'
+                ];
+            }
+        } catch (PDOException $e) {
+            return [
+                'success' => false,
+                'message' => 'Erreur de base de données: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    public function deleteUser($user_id) {
+        try {
+            // Vérifier que ce n'est pas un admin
+            $query = "SELECT ROLE FROM " . $this->table_name . " WHERE ID_UTILISATEUR = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $user_id);
+            $stmt->execute();
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($user && $user['ROLE'] === 'administrateur') {
+                return [
+                    'success' => false,
+                    'message' => 'Impossible de supprimer un administrateur'
+                ];
+            }
+            
+            // Supprimer les favoris de l'utilisateur
+            $query = "DELETE FROM favori WHERE ID_UTILISATEUR = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $user_id);
+            $stmt->execute();
+            
+            // Supprimer l'utilisateur
+            $query = "DELETE FROM " . $this->table_name . " WHERE ID_UTILISATEUR = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $user_id);
+            
+            if ($stmt->execute()) {
+                return [
+                    'success' => true,
+                    'message' => 'Utilisateur supprimé avec succès'
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Erreur lors de la suppression'
+                ];
+            }
+        } catch (PDOException $e) {
+            return [
+                'success' => false,
+                'message' => 'Erreur de base de données: ' . $e->getMessage()
+            ];
+        }
+    }
 }
 ?>
